@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner - Zarządzaj Zadaniami</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 25px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat b {
+            display: block;
+            font-size: 22px;
+            color: #007bff;
+        }
+
+        .stat span {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+      body::before {
+    content: "";
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    background: #6c63ff;
+    filter: blur(150px);
+    top: -50px;
+    left: -50px;
+    z-index: -1;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    background: #ff6584;
+    filter: blur(150px);
+    bottom: -50px;
+    right: -50px;
+    z-index: -1;
+}
+        .add-task-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+        }
+
+        button.btn-add {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.btn-add:hover {
+            background: #0056b3;
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item.done {
+            background-color: #f8f9fa;
+        }
+
+        .task-item.done .task-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .task-text {
+            flex-grow: 1;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .prio-wysoki { background: #ffe5e5; color: #d00000; }
+        .prio-średni { background: #fff0cc; color: #b37700; }
+        .prio-niski { background: #e5f5e5; color: #008000; }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        #emptyState {
+            text-align: center;
+            color: #777;
+            padding: 30px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📋 Planner zadań</h1>
+
+        <div class="stats">
+            <div class="stat"><b id="totalTasks">0</b><span>Razem</span></div>
+            <div class="stat"><b id="completedTasks">0</b><span>Wykonane</span></div>
+            <div class="stat"><b id="pendingTasks">0</b><span>Oczekujące</span></div>
+        </div>
+
+        <div class="add-task-section">
+            <input type="text" id="taskInput" placeholder="Wpisz nowe zadanie...">
+            <div class="controls">
+                <select id="prioritySelect">
+                    <option value="niski">Niski priorytet</option>
+                    <option value="średni" selected>Średni priorytet</option>
+                    <option value="wysoki">Wysoki priorytet</option>
+                </select>
+                <button class="btn-add" id="addBtn">Dodaj</button>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">Wszystkie</button>
+            <button class="filter-btn" data-filter="pending">Oczekujące</button>
+            <button class="filter-btn" data-filter="completed">Wykonane</button>
+            <button class="filter-btn" data-filter="wysoki">wysoki priorytet</button>
+        </div>
+
+        <div id="tasksList"></div>
+        <div id="emptyState">Brak zadań. Dodaj pierwsze zadanie! 🎯</div>
+    </div>
+
+    <script>
+       
+        let zadania = JSON.parse(localStorage.getItem('app_zadania')) || [];
+        let aktualnyFiltr = 'all';
+
+      
+        document.addEventListener('DOMContentLoaded', () => {
+            odswiezAplikacje();
+
+           
+            document.getElementById('addBtn').addEventListener('click', dodajNowe);
+            document.getElementById('taskInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') dodajNowe();
+            });
+
+           
+            const przyciski = document.querySelectorAll('.filter-btn');
+            przyciski.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    przyciski.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    aktualnyFiltr = this.getAttribute('data-filter');
+                    odswiezAplikacje();
+                });
+            });
+        });
+
+       
+        function dodajNowe() {
+            const pole = document.getElementById('taskInput');
+            const tekst = pole.value.trim();
+            const prio = document.getElementById('prioritySelect').value;
+
+            if (tekst.length === 0) {
+                alert('Wpisz tekst zadania!');
+                return;
+            }
+            if (tekst.length < 3) {
+                alert('Zadanie musi mieć co najmniej 3 znaki!');
+                return;
+            }
+
+            zadania.push({
+                id: Date.now(),
+                text: tekst,
+                completed: false,
+                priority: prio
+            });
+
+            zapiszLokalnie();
+            pole.value = '';
+            odswiezAplikacje();
+        }
+
+      
+        function usunZadanie(id) {
+            zadania = zadania.filter(z => z.id !== id);
+            zapiszLokalnie();
+            odswiezAplikacje();
+        }
+
+        
+        function oznaczJakoZrobione(id) {
+            const zadanie = zadania.find(z => z.id === id);
+            if (zadanie) {
+                zadanie.completed = !zadanie.completed;
+                zapiszLokalnie();
+                odswiezAplikacje();
+            }
+        }
+
+       
+        function zapiszLokalnie() {
+            localStorage.setItem('app_zadania', JSON.stringify(zadania));
+        }
+
+        function odswiezAplikacje() {
+            
+            let zrobioneLicznik = 0;
+            zadania.forEach(z => {
+                if (z.completed) zrobioneLicznik++;
+            });
+
+            document.getElementById('totalTasks').innerText = zadania.length;
+            document.getElementById('completedTasks').innerText = zrobioneLicznik;
+            document.getElementById('pendingTasks').innerText = zadania.length - zrobioneLicznik;
+
+          
+            let zadaniaDoPokazania = zadania;
+            if (aktualnyFiltr === 'pending') {
+                zadaniaDoPokazania = zadania.filter(z => z.completed === false);
+            } else if (aktualnyFiltr === 'completed') {
+                zadaniaDoPokazania = zadania.filter(z => z.completed === true);
+            } else if (aktualnyFiltr === 'wysoki') {
+                zadaniaDoPokazania = zadania.filter(z => z.priority === 'wysoki' && z.completed === false);
+            }
+
+        
+            const listaDiv = document.getElementById('tasksList');
+            const pusteInfo = document.getElementById('emptyState');
+            listaDiv.innerHTML = '';
+
+            if (zadaniaDoPokazania.length === 0) {
+                pusteInfo.style.display = 'block';
+            } else {
+                pusteInfo.style.display = 'none';
+                
+                let htmlZadan = '';
+                zadaniaDoPokazania.forEach(z => {
+                    const czyZaznaczony = z.completed ? 'checked' : '';
+                    const klasaZrobione = z.completed ? 'done' : '';
+                    
+                    htmlZadan += `
+                        <div class="task-item ${klasaZrobione}">
+                            <input type="checkbox" ${czyZaznaczony} onchange="oznaczJakoZrobione(${z.id})">
+                            <span class="task-text">${z.text}</span>
+                            <span class="badge prio-${z.priority}">${z.priority}</span>
+                            <button class="btn-delete" onclick="usunZadanie(${z.id})">Usuń</button>
+                        </div>
+                    `;
+                });
+                
+                listaDiv.innerHTML = htmlZadan;
+            }
+        }
+    </script>
+</body>
+</html>
